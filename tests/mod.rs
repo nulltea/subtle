@@ -423,3 +423,10 @@ fn less_than_ordering() {
     assert_eq!(cmp::Ordering::Greater.ct_lt(&cmp::Ordering::Less).unwrap_u8(), 0);
     assert_eq!(cmp::Ordering::Less.ct_lt(&cmp::Ordering::Greater).unwrap_u8(), 1);
 }
+
+#[test]
+fn black_box_round_trip() {
+    let n = 42u64;
+    let black_box = BlackBox::new(n);
+    assert_eq!(n, black_box.get());
+}
