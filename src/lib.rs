@@ -993,6 +993,13 @@ impl ConstantTimeLess for cmp::Ordering {
 pub struct BlackBox<T: Copy>(T);
 
 impl<T: Copy> BlackBox<T> {
+    /// Constructs a new instance of `BlackBox` which will wrap the specified value.
+    ///
+    /// All access to the inner value will be mediated by a `black_box` optimization barrier.
+    pub const fn new(value: T) -> Self {
+        Self(value)
+    }
+
     /// Read the inner value, applying an optimization barrier on access.
     pub fn get(self) -> T {
         black_box(self.0)
