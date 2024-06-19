@@ -96,6 +96,9 @@ use core::cmp;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Neg, Not};
 use core::option::Option;
 
+#[cfg(feature = "core_hint_black_box")]
+use core::hint::black_box;
+
 /// The `Choice` struct represents a choice for use in conditional assignment.
 ///
 /// It is a wrapper around a `u8`, which should have the value either `1` (true)
@@ -217,27 +220,25 @@ impl Not for Choice {
 /// code may break in a non-destructive way in the future, “constant-time” code
 /// is a continually moving target, and this is better than doing nothing.
 #[inline(never)]
-fn black_box(input: u8) -> u8 {
-    debug_assert!((input == 0u8) | (input == 1u8));
-
+fn black_box<T: Copy>(input: T) -> T {
     unsafe {
         // Optimization barrier
         //
-        // Unsafe is ok, because:
-        //   - &input is not NULL;
-        //   - size of input is not zero;
-        //   - u8 is neither Sync, nor Send;
-        //   - u8 is Copy, so input is always live;
-        //   - u8 type is always properly aligned.
-        core::ptr::read_volatile(&input as *const u8)
+        // SAFETY:
+        //   - &input is not NULL because we own input;
+        //   - input is Copy and always live;
+        //   - input is always properly aligned.
+        core::ptr::read_volatile(&input)
     }
 }
 
 impl From<u8> for Choice {
     #[inline]
     fn from(input: u8) -> Choice {
+        debug_assert!((input == 0u8) | (input == 1u8));
+
         // Our goal is to prevent the compiler from inferring that the value held inside the
-        // resulting `Choice` struct is really an `i1` instead of an `i8`.
+        // resulting `Choice` struct is really a `bool` instead of a `u8`.
         Choice(black_box(input))
     }
 }
@@ -984,5 +985,16 @@ impl ConstantTimeLess for cmp::Ordering {
         let a = (*self as i8) + 1;
         let b = (*other as i8) + 1;
         (a as u8).ct_lt(&(b as u8))
+    }
+}
+
+/// Wrapper type which implements an optimization barrier for all accesses.
+#[derive(Clone, Copy, Debug)]
+pub struct BlackBox<T: Copy>(T);
+
+impl<T: Copy> BlackBox<T> {
+    /// Read the inner value, applying an optimization barrier on access.
+    pub fn get(self) -> T {
+        black_box(self.0)
     }
 }
