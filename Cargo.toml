@@ -23,7 +23,7 @@ exclude = [
 ]
 
 [badges]
-travis-ci = { repository = "dalek-cryptography/subtle", branch = "master"}
+travis-ci = { repository = "dalek-cryptography/subtle", branch = "main"}
 
 [dev-dependencies]
 rand = { version = "0.8" }
