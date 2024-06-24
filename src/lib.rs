@@ -219,6 +219,7 @@ impl Not for Choice {
 /// Note: Rust's notion of "volatile" is subject to change over time. While this
 /// code may break in a non-destructive way in the future, “constant-time” code
 /// is a continually moving target, and this is better than doing nothing.
+#[cfg(not(feature = "core_hint_black_box"))]
 #[inline(never)]
 fn black_box<T: Copy>(input: T) -> T {
     unsafe {
@@ -996,7 +997,7 @@ impl<T: Copy> BlackBox<T> {
     /// Constructs a new instance of `BlackBox` which will wrap the specified value.
     ///
     /// All access to the inner value will be mediated by a `black_box` optimization barrier.
-    pub const fn new(value: T) -> Self {
+    pub fn new(value: T) -> Self {
         Self(value)
     }
 
